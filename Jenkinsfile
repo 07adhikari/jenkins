@@ -1,11 +1,36 @@
-node {
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        git([url: 'https://github.com/07adhikari/jenkins', branch: 'master'])
 
-    checkout scm
-
-    docker.withRegistry('https://hub.docker.com/repository/docker/surajadhikar/my_custom_images', 'dockerhub') {
-
-        def customImage = docker.build("surajadhikar/my_custom_images")
-
-        customImage.push()
+      }
     }
+    stage('Docker build') {
+      steps{
+        script {
+          dockerImage = docker.build surajadhikar/hu_devops_19_2021_465
+        }
+      }
+    }
+      
+    stage('Approval') {
+      steps{
+         docker run -it --rm --name suraj_custom ./mvnw test
+      }
+    }
+  }
 }
+    stage('Deploy Image') {
+      steps{
+        script {
+          docker.https://hub.docker.com/repository/docker/surajadhikar/hu_devops_19_2021_465( '', Dockerhub ) {
+            dockerImage.push("$BUILD_NUMBER")
+             dockerImage.push('latest')
+
+          }
+        }
+      }
+    }
+    
